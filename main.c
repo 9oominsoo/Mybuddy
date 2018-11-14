@@ -60,6 +60,8 @@ static void __process_operations(void)
 	char line[120];
 	unsigned int page;
 
+	PRINTF("$ ");
+
 	while (keep_running && fgets(line, sizeof(line), stdin)) {
 		argc = __parse_operation(line, argv);
 		if (argc <= 0) {
@@ -72,38 +74,41 @@ static void __process_operations(void)
 		switch(tolower(argv[0][0])) {
 		case 'a':
 			if (__check_operation(2, argc, "alloc")) {
-				keep_running = false;
-				break;
+				continue;
 			}
-			if (alloc_pages(&page, atoi(argv[1]) == 0)) {
+			if (alloc_pages(&page, atoi(argv[1])) == 0) {
 				mark_alloc_pages(page, atoi(argv[1]));
 			}
 			break;
 		case 'd':
 		case 'f':
 			if (__check_operation(2, argc, "free")) {
-				keep_running = false;
-				break;
+				continue;
 			}
 			clear_alloc_pages(atoi(argv[1]));
 			break;
 		case 'p':
 			if (__check_operation(2, argc, "print")) {
-				keep_running = false;
-				break;
+				continue;
 			}
 			break;
 		case 'x':
 			if (__check_operation(1, argc, "print all")) {
-				keep_running = false;
-				break;
+				continue;
 			}
+			break;
+		case 'l':
+			if (__check_operation(1, argc, "list")) {
+				continue;
+			}
+			list_alloc_pages();
 			break;
 		case 'q':
 		default:
 			keep_running = false;
 			break;
 		}
+		PRINTF("$ ");
 	}
 }
 
