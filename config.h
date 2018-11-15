@@ -5,7 +5,7 @@
 typedef int bool;
 
 #define DEFAULT_NR_PAGES	32
-#define DEFAULT_NR_ALLOCATORS 1
+//#define NR_ORDERS	12
 
 extern bool verbose;
 

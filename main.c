@@ -4,14 +4,14 @@
 #include <errno.h>
 #include <string.h>
 #include <ctype.h>
+#include <getopt.h>
 
 #include "config.h"
 #include "buddy.h"
 #include "checker.h"
 
-bool verbose = true;
+bool verbose = false;
 static unsigned int nr_pages = DEFAULT_NR_PAGES;
-static unsigned int nr_allocators = DEFAULT_NR_ALLOCATORS;
 
 static int __parse_operation(char *line, char *argv[])
 {
@@ -45,70 +45,83 @@ static int __parse_operation(char *line, char *argv[])
 static bool __check_operation(const int expect, const int argc, const char *name)
 {
 	if (expect != argc) {
-		fprintf(stderr,
-				"Wrong %s operation (argc %d != %d)\n", name, expect, argc);
+		fprintf(stderr, "Wrong %s operation (argc %d != %d)\n",
+				name, expect, argc);
 		return true;
 	}
 	return false;
 }
 
+/**
+ * Process CLI inputs
+ */
 static void __process_operations(void)
 {
 	bool keep_running = true;
 	int argc;
 	char *argv[60] = {NULL};
 	char line[120];
+	unsigned int order;
 	unsigned int page;
 
-	PRINTF("$ ");
-
-	while (keep_running && fgets(line, sizeof(line), stdin)) {
+	while (keep_running && printf(">> ") && fgets(line, sizeof(line), stdin)) {
 		argc = __parse_operation(line, argv);
 		if (argc <= 0) {
 			break;
 		}
 		if (strlen(argv[0]) != 1) {
-			printf("Unknown operation '%c'\n", argv[0]);
+			printf("Unknown operation '%s'\n", argv[0]);
 			break;
 		}
 		switch(tolower(argv[0][0])) {
-		case 'a':
-			if (__check_operation(2, argc, "alloc")) {
-				continue;
-			}
-			if (alloc_pages(&page, atoi(argv[1])) == 0) {
-				mark_alloc_pages(page, atoi(argv[1]));
+		case '#': /* comment */
+			continue;
+		case 'a': /* allocation */
+			if (__check_operation(2, argc, "alloc")) continue;
+			order = atoi(argv[1]);
+			if (alloc_pages(&page, order) == 0) {
+				mark_alloc_pages(page, order);
 			}
 			break;
-		case 'd':
+		case 'd': /* free / deallocation */
 		case 'f':
-			if (__check_operation(2, argc, "free")) {
-				continue;
-			}
+			if (__check_operation(2, argc, "free")) continue;
 			clear_alloc_pages(atoi(argv[1]));
 			break;
-		case 'p':
-			if (__check_operation(2, argc, "print")) {
-				continue;
+		case 'p': /* print list */
+			if (__check_operation(2, argc, "print")) continue;
+			print_free_pages(atoi(argv[1]));
+			break;
+		case 'x': /* dump all lists */
+			if (__check_operation(1, argc, "print all")) continue;
+			for (order = 0; order < NR_ORDERS; order++) {
+				print_free_pages(order);
 			}
 			break;
-		case 'x':
-			if (__check_operation(1, argc, "print all")) {
-				continue;
-			}
-			break;
-		case 'l':
-			if (__check_operation(1, argc, "list")) {
-				continue;
-			}
+		case 'l': /* list operations */
+			if (__check_operation(1, argc, "list")) continue;
 			list_alloc_pages();
 			break;
-		case 'q':
-		default:
+		case 'u': /* check unusable index */
+			if (__check_operation(2, argc, "unusable index")) continue;
+			order = atoi(argv[1]);
+			PRINTF("Unusable index for order %d is ", order);
+			printf("%.4f\n", get_unusable_index(order));
+			break;
+		case 'h': /* Help!! */
+			printf("  a <order> : allocate a 2^@order chunk\n");
+			printf("  d <id>    : free the chunk whose allocation id is @id\n");
+			printf("  f <id>    : same to 'd'\n");
+			printf("  p <order> : print out the free chunks of @order\n");
+			printf("  x         : print all free chunks\n");
+			printf("  l         : show the allocated state\n");
+			break;
+		case 'q': /* I'm done. Good bye*/
 			keep_running = false;
 			break;
+		default:
+			fprintf(stderr, "Unknown operation '%c'\n", argv[0][0]);
 		}
-		PRINTF("$ ");
 	}
 }
 
@@ -117,11 +130,8 @@ static int __parse_options(int argc, char *argv[]) {
 	char opt;
 	while ((opt = getopt(argc, argv, "h?vqn:a:")) != -1) {
 		switch(opt) {
-		case 'n':
+		case 'n': /* set the number of pages to manage */
 			nr_pages = atol(optarg);
-			break;
-		case 'a':
-			nr_allocators = atoi(optarg);
 			break;
 		case 'v':
 			verbose = true;
@@ -133,6 +143,10 @@ static int __parse_options(int argc, char *argv[]) {
 		case '?':
 		default:
 			fprintf(stderr, "Usage: %s\n", argv[0]);
+			fprintf(stderr, "  -v : verbose\n");
+			fprintf(stderr, "  -q : be quiet\n");
+			fprintf(stderr, "  -n <nr_pages>\n");
+
 			return -EBUSY;
 			break;
 		}
@@ -145,8 +159,7 @@ int main(int argc, char *argv[])
 	if (__parse_options(argc, argv))
 		return EXIT_FAILURE;
 
-	// PRINTF("- Allocators : %d\n", nr_allocators);
-	PRINTF("- Pages      : %u\n", nr_pages);
+	PRINTF("Starting the buddy system with %u pages. Have fun!!\n", nr_pages);
 
 	if (init_checker()) return EXIT_FAILURE;
 
