@@ -54,7 +54,7 @@ int mark_alloc_pages(const unsigned int page, const unsigned int order)
 	return 0;
 }
 
-int clear_alloc_pages(const unsigned int id)
+int clear_alloc_pages(const unsigned int id, unsigned int *page, unsigned int *order)
 {
 	struct op *op;
 
@@ -64,6 +64,8 @@ int clear_alloc_pages(const unsigned int id)
 			TAILQ_REMOVE(&ops, op, list);
 			PRINTF(" Free order-%u page(s) from %u (id=%u)\n",
 					op->order, op->page, op->id);
+			*page = op->page;
+			*order = op->order;
 			pthread_mutex_unlock(&ops_lock);
 
 			free(op);
@@ -80,11 +82,11 @@ void list_alloc_pages(void)
 {
 	struct op *op;
 
-	printf("%6s  %8s  %2s\n", "ID", "page", "order");
-	printf("-----------------------\n");
+	printf("%6s    %8s  %2s\n", "ID", "page", "order");
+	printf("---------------------------\n");
 	pthread_mutex_lock(&ops_lock);
 	TAILQ_FOREACH(op, &ops, list) {
-		printf("%6u: %8u  %2u\n", op->id, op->page, op->order);
+		printf("%6u: %#8x  %2u\n", op->id, op->page, op->order);
 	}
 	pthread_mutex_unlock(&ops_lock);
 }

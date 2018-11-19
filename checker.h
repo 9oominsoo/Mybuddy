@@ -1,7 +1,7 @@
 #ifndef _CHECKER_H_
 
 int mark_alloc_pages(const unsigned int page, const unsigned int order);
-int clear_alloc_pages(const unsigned int id);
+int clear_alloc_pages(const unsigned int id, unsigned int *page, unsigned int *order);
 void list_alloc_pages(void);
 
 int init_checker(void);

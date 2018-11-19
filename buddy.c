@@ -1,16 +1,7 @@
 #include <stdio.h>
 #include <errno.h>
-#include <pthread.h>
 
 #include "config.h"
-
-/**
- * @nr_pages: the number of pages that your buddy system should maintain.
- *
- * This value will be set through init_buddy(), and once it is set, it will
- * not be changed thereafter.
- */
-static unsigned int nr_pages = 0;
 
 
 /**
@@ -20,36 +11,33 @@ static unsigned int nr_pages = 0;
  * free chunks.
  */
 struct chunk {
+	/**
+	 * TODO: You can modify this structure as you need.
+	 */
 	unsigned int start;
 	unsigned int order;
 };
 
 struct chunk_list {
-	unsigned int order;
-	pthread_mutex_t lock;	/* You may need a mutex (but not limited to)
-							 * eo provide concurrent and safe accesses to this
-							 * struct chunk_list.
-							 */
 	/**
-	 * TODO: You may (or may not) need a list of chunks for this @order.
+	 * TODO: You can modify this structure as you need
 	 */
+	unsigned int order;
 };
 
 struct buddy {
+	/**
+	 * TODO: You can modify this example data structure as you need
+	 */
 	struct chunk_list chunks[NR_ORDERS];
 							/* @NR_ORDERS will be set during compilation.
-							 * See Makefile for the setting.
+							 * See Makefile for its setting (default = 12).
+							 * MAKE SURE your buddy implementation can handle
+							 * up to order-(NR_ORDERS-1).
 							 */
+
 	unsigned int allocated;	/* Number of pages that are allocated */
 	unsigned int free;		/* Number of pages that are free */
-
-	pthread_mutex_t lock;	/* You may need some (but not limited to )
-							 * synchronization methods to allow concurrent
-							 * and safe accesses to this struct buddy.
-							 */
-	/**
-	 * TODO: Add whatever you need to implement the buddy system allocator
-	 */
 };
 
 
@@ -116,9 +104,12 @@ int alloc_pages(unsigned int *page, const unsigned int order)
 	 * if (exist) {
 	 *    allocate the chunk from the list; Done!
 	 * } else {
-	 *    Make a order-@order chunk by breaking a higher-order chunk(s).
+	 *    Make a order-@order chunk by breaking a higher-order chunk(s)
+	 *    - Find the smallest free chunk that can satisfy the request
+	 *    - Break the chunk until it is small enough
+	 *    - Put remainders into the free chunk list
+	 *
 	 *    Return the allocated chunk via @*page
-	 *    Put the remainders into corresponding chunk lists
 	 *
 	 *    Make sure that your implementation handled the cascading case
 	 *    where a free chunk is only available from many-times-higher-order
@@ -131,32 +122,32 @@ int alloc_pages(unsigned int *page, const unsigned int order)
 	 * Also, make sure to use PRINTF, _NOT_ printf.
 	 *
 	 * - Split an order-@x chunk starting from @page into @left and @right:
-	 *   PRINTF("SPLIT   : 0x%x:%u -> 0x%x:%u + 0x%x:%u\n",
+	 *   PRINTF("SPLIT 0x%x:%u -> 0x%x:%u + 0x%x:%u\n",
 	 *			page, x, left, x-1, right, x-1);
 	 *
 	 * - Put an order-@x chunk starting from @page into the free list:
-	 *   PRINTF("PUT     : 0x%x:%u\n", page, x);
+	 *   PRINTF("PUT   0x%x:%u\n", page, x);
 	 *
 	 * - Allocate an order-@x chunk starting from @page for serving the request:
-	 *   PRINTF("ALLOCATE: 0x%x:%x\n", page, x);
+	 *   PRINTF("ALLOC 0x%x:%x\n", page, x);
 	 *
 	 * Example: A order-4 chunk starting from 0 is split into 0:3 and 8:3,
 	 * and 0:3 is split again to 0:2 and 4:2 to serve an order-2 allocation.
 	 * And then 0:2 is allocated:
 	 *
-	 * SPLIT   : 0x0:4 -> 0x0:3 + 0x8:3
-	 * PUT     : 0x8:3
-	 * SPLIT   : 0x0:3 -> 0x0:2 + 0x4:2
-	 * PUT     : 0x4:2
-	 * ALLOCATE: 0x0:2
+	 * SPLIT 0x0:4 -> 0x0:3 + 0x8:3
+	 * PUT   0x8:3
+	 * SPLIT 0x0:3 -> 0x0:2 + 0x4:2
+	 * PUT   0x4:2
+	 * ALLOC 0x0:2
 	 *
 	 *       OR
 	 *
-	 * SPLIT   : 0x0:4 -> 0x0:3 + 0x8:3
-	 * SPLIT   : 0x0:3 -> 0x0:2 + 0x4:2
-	 * PUT     : 0x8:3
-	 * PUT     : 0x4:2
-	 * ALLOCATE: 0x0:2
+	 * SPLIT 0x0:4 -> 0x0:3 + 0x8:3
+	 * SPLIT 0x0:3 -> 0x0:2 + 0x4:2
+	 * PUT   0x8:3
+	 * PUT   0x4:2
+	 * ALLOC 0x0:2
 	 *
 	 * ALL POSSIBLE AND CORRECT COMBINATIONS WILL BE ACCEPTED
 	 *----------------------------------------------------------------------
@@ -174,12 +165,8 @@ int alloc_pages(unsigned int *page, const unsigned int order)
  * Description:
  *    Assume @page was allocated by alloc_pages(@order) above. Don't forget
  *  to merge freed chunk with its buddy if it exists.
- *
- * Return:
- *   0      : On successful deallocation
- *  -EINVAL : On a malicious free_pages (bonus points!)
  */
-int free_pages(unsigned int page, const unsigned int order)
+void free_pages(unsigned int page, const unsigned int order)
 {
 	/**
 	 * Your implementation will look (but not limited to) like;
@@ -199,26 +186,24 @@ int free_pages(unsigned int page, const unsigned int order)
 	 * Similar to alloc_pages, print following messages when the event happens;
 	 *
 	 * - Merge order-$x buddies starting from $left and $right:
-	 *   PRINTF("MERGE    : 0x%x:%u + 0x%x:%u -> 0x%x:%u\n",
+	 *   PRINTF("MERGE : 0x%x:%u + 0x%x:%u -> 0x%x:%u\n",
 	 *			left, x, right, x, left, x+1);
 	 *
 	 * - Put an order-@x chunk starting from @page into the free list:
-	 *   PRINTF("PUT     : 0x%x:%u\n", page, x);
+	 *   PRINTF("PUT  : 0x%x:%u\n", page, x);
 	 *
 	 * Example: Two buddies 0:2 and 4:2 (0:2 indicates an order-2 chunk
 	 * starting from 0) are merged to 0:3, and it is merged again with 8:3,
 	 * producing 0:4. And then finally the chunk is put into the order-4 free
 	 * chunk list:
 	 *
-	 * MERGE    : 0x0:2 + 0x4:2 -> 0x0:3
-	 * PUT      : 0x0:3         <--- This line can be omitted
-	 * MERGE    : 0x0:3 + 0x8:3 -> 0x0:4
-	 * PUT      : 0x0:4
+	 * MERGE : 0x0:2 + 0x4:2 -> 0x0:3
+	 * MERGE : 0x0:3 + 0x8:3 -> 0x0:4
+	 * PUT   : 0x0:4
 	 *----------------------------------------------------------------------
 	 */
 	buddy.allocated -= (1 << order);
 	buddy.free += (1 << order);
-	return -EINVAL;
 }
 
 
@@ -229,8 +214,8 @@ int free_pages(unsigned int page, const unsigned int order)
  *  0x1d:0
  *
  *  print_free_pages(2):
- *  0x10:2
- *  0x18:2
+ *    0x10:2
+ *    0x18:2
  */
 void print_free_pages(const unsigned int order)
 {
@@ -240,7 +225,7 @@ void print_free_pages(const unsigned int order)
 	 * Your implementation should print out each free chunk
 	 * in the following format;
 	 */
-	printf("0x%x:%u\n", starting_page, order);
+	printf("  0x%x:%u\n", starting_page, order);
 }
 
 
@@ -281,13 +266,20 @@ int init_buddy(unsigned int _nr_pages_in_order_)
 	int i;
 
 	buddy.allocated = 0;
-	buddy.free = nr_pages;
+	buddy.free = 1 << _nr_pages_in_order_;
+
+	/* TODO: Do your initialization as you need */
 
 	for (i = 0; i < NR_ORDERS; i++) {
 		buddy.chunks[i].order = i;
 	}
 
-	/* TODO: Do your initialization if needed */
+	/* TODO: Don't forget to initiate the free chunk list with
+	 * order-(@NR_ORDERS-1) chunks. Note you may add multiple chunks
+	 * if @_nr_pages_in_order_ >= @NR_ORDERS
+	 * E.g., if @_nr_pages_in_order_ == 10 and @NR_ORDERS=10, the initial
+	 * free chunk list will be initiated with two chunks; 0:9, 2^9:9.
+	 */
 
 	return 0;
 }

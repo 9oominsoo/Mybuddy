@@ -20,11 +20,11 @@ clean:
 
 .PHONY: test0
 test0: clean pa4 workloads/test0
-	./pa4 -q -n 32768 < workloads/test0 > RESULT
+	./pa4 -q -n 12 < workloads/test0 > RESULT
 
 .PHONY: test1
 test1: clean pa4 workloads/test1
-	./pa4 -q -n 32768 < workloads/test1 > RESULT
+	./pa4 -q -n 12 < workloads/test1 > RESULT
 
 .PHONY: cscope
 cscope:

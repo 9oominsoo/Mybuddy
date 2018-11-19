@@ -86,15 +86,17 @@ static void __process_operations(void)
 		case 'd': /* free / deallocation */
 		case 'f':
 			if (__check_operation(2, argc, "free")) continue;
-			clear_alloc_pages(atoi(argv[1]));
+			if (clear_alloc_pages(atoi(argv[1]), &page, &order) == 0) {
+				free_pages(page, order);
+			}
 			break;
-		case 'p': /* print list */
+		case 's': /* show the chunk list */
 			if (__check_operation(2, argc, "print")) continue;
 			print_free_pages(atoi(argv[1]));
 			break;
-		case 'x': /* dump all lists */
+		case 'p': /* print chunk lists */
 			if (__check_operation(1, argc, "print all")) continue;
-			for (order = 0; order < NR_ORDERS; order++) {
+			for (order = NR_ORDERS - 1; order > 0; order--) {
 				print_free_pages(order);
 			}
 			break;
