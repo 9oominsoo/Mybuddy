@@ -11,7 +11,7 @@
 #include "checker.h"
 
 bool verbose = false;
-static unsigned int nr_pages = DEFAULT_NR_PAGES;
+static unsigned int nr_pages_in_order = DEFAULT_NR_PAGES_IN_ORDER;
 
 static int __parse_operation(char *line, char *argv[])
 {
@@ -131,7 +131,7 @@ static int __parse_options(int argc, char *argv[]) {
 	while ((opt = getopt(argc, argv, "h?vqn:a:")) != -1) {
 		switch(opt) {
 		case 'n': /* set the number of pages to manage */
-			nr_pages = atol(optarg);
+			nr_pages_in_order = atol(optarg);
 			break;
 		case 'v':
 			verbose = true;
@@ -145,7 +145,7 @@ static int __parse_options(int argc, char *argv[]) {
 			fprintf(stderr, "Usage: %s\n", argv[0]);
 			fprintf(stderr, "  -v : verbose\n");
 			fprintf(stderr, "  -q : be quiet\n");
-			fprintf(stderr, "  -n <nr_pages>\n");
+			fprintf(stderr, "  -n <nr_pages in order-n notation>\n");
 
 			return -EBUSY;
 			break;
@@ -159,11 +159,12 @@ int main(int argc, char *argv[])
 	if (__parse_options(argc, argv))
 		return EXIT_FAILURE;
 
-	PRINTF("Starting the buddy system with %u pages. Have fun!!\n", nr_pages);
+	PRINTF("Starting the buddy system with 2^%u pages. Have fun!!\n",
+			nr_pages_in_order);
 
 	if (init_checker()) return EXIT_FAILURE;
 
-	if (init_buddy(nr_pages))
+	if (init_buddy(nr_pages_in_order))
 		goto out_checker;
 
 	__process_operations();
