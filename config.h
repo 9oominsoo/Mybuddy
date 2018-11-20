@@ -10,5 +10,7 @@ typedef int bool;
 extern bool verbose;
 
 #define PRINTF(...) \
-	if (verbose) printf(__VA_ARGS__)
+	if (verbose > 0) printf(__VA_ARGS__)
+#define LOG(...) \
+	if (verbose > 1) printf(__VA_ARGS__)
 #endif

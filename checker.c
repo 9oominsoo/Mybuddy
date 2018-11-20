@@ -74,7 +74,7 @@ int clear_alloc_pages(const unsigned int id, unsigned int *page, unsigned int *o
 	}
 	pthread_mutex_unlock(&ops_lock);
 
-	fprintf(stderr, "No alloc operation with id=%u\n", id);
+	fprintf(stderr, "ERROR: No alloc operation with id=%u\n", id);
 	return -ENOENT;
 }
 

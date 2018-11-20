@@ -225,7 +225,7 @@ void print_free_pages(const unsigned int order)
 	 * Your implementation should print out each free chunk
 	 * in the following format;
 	 */
-	printf("  0x%x:%u\n", starting_page, order);
+	printf("    0x%x:%u\n", starting_page, order);
 }
 
 
@@ -233,9 +233,9 @@ void print_free_pages(const unsigned int order)
  * Print out the unusable index(UI) for order-@order.
  *
  * Description:
- *    Print the unusable index of @order. In the above example, we have 27 free
+ *    Return the unusable index of @order. In the above example, we have 27 free
  *  pages;
- *  27 = sum(i = 0 to @NR_ORDERS-1){ (1 << i) x # of free chunks of order-i }
+ *  27 = sum(i = 0 to @NR_ORDERS-1){ (1 << i) * # of order-i free chunks }
  *    and
  *  UI(0) = 0 / 27 = 0.0 (UI of 0 is always 0 in fact).
  *  UI(1) = 1 (for 0x1d) / 27 = 0.037
@@ -261,12 +261,12 @@ double get_unusable_index(unsigned int order)
  *   0      : On successful initialization
  *  -EINVAL : Invalid arguments or when something goes wrong
  */
-int init_buddy(unsigned int _nr_pages_in_order_)
+int init_buddy(unsigned int nr_pages_in_order)
 {
 	int i;
 
 	buddy.allocated = 0;
-	buddy.free = 1 << _nr_pages_in_order_;
+	buddy.free = 1 << nr_pages_in_order;
 
 	/* TODO: Do your initialization as you need */
 
@@ -275,10 +275,10 @@ int init_buddy(unsigned int _nr_pages_in_order_)
 	}
 
 	/* TODO: Don't forget to initiate the free chunk list with
-	 * order-(@NR_ORDERS-1) chunks. Note you may add multiple chunks
-	 * if @_nr_pages_in_order_ >= @NR_ORDERS
-	 * E.g., if @_nr_pages_in_order_ == 10 and @NR_ORDERS=10, the initial
-	 * free chunk list will be initiated with two chunks; 0:9, 2^9:9.
+	 * order-(@NR_ORDERS-1) chunks. Note you may add multiple chunks if
+	 * @nr_pages_in_order >= @NR_ORDERS. For instance, when
+	 * @nr_pages_in_order=10 and @NR_ORDERS=10, the initial free chunk
+	 * list will have two chunks; 0x0:9, 0x200:9.
 	 */
 
 	return 0;

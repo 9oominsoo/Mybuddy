@@ -10,7 +10,7 @@
 #include "buddy.h"
 #include "checker.h"
 
-bool verbose = false;
+int verbose = 1;
 static unsigned int nr_pages_in_order = DEFAULT_NR_PAGES_IN_ORDER;
 
 static int __parse_operation(char *line, char *argv[])
@@ -102,6 +102,7 @@ static void __process_operations(void)
 			for (order = NR_ORDERS - 1; order > 0; order--) {
 				print_free_pages(order);
 			}
+			printf("----------------\n");
 			break;
 		case 'l': /* list operations */
 			if (__check_operation(1, argc, "list")) continue;
@@ -111,7 +112,7 @@ static void __process_operations(void)
 			if (__check_operation(2, argc, "unusable index")) continue;
 			order = atoi(argv[1]);
 			PRINTF("Unusable index for order %d is ", order);
-			printf("%.4f\n", get_unusable_index(order));
+			printf("    %.4f\n", get_unusable_index(order));
 			break;
 		case 'h': /* Help!! */
 			printf("  a <order> : allocate a 2^@order chunk\n");
@@ -124,6 +125,15 @@ static void __process_operations(void)
 			break;
 		case 'q': /* I'm done. Good bye*/
 			keep_running = false;
+			break;
+		case '0':
+			verbose = 0;
+			break;
+		case '1':
+			verbose = 1;
+			break;
+		case '2':
+			verbose = 2;
 			break;
 		default:
 			fprintf(stderr, "Unknown operation '%c'\n", argv[0][0]);
@@ -141,10 +151,10 @@ static int __parse_options(int argc, char *argv[]) {
 			nr_pages_in_order = atol(optarg);
 			break;
 		case 'v':
-			verbose = true;
+			verbose++;
 			break;
 		case 'q':
-			verbose = false;
+			verbose--;
 			break;
 		case 'h':
 		case '?':
