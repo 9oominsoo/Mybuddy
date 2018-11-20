@@ -1,0 +1,41 @@
+# Line 2: Initial free chunks list. The chunks might be reordered.
+  0x0:11
+  0x800:11
+
+----------------
+# Line 8: After some initial allocation, all page should be allocated
+----------------
+
+# Line 10: The buddy system allocator should deny excessive allocation
+	Cannot allocate order-5 page
+
+# Line 29: After allocating and freeing, only one page should be remaining
+	0x801:0
+
+----------------
+# Line 31: The last page is allocated, and
+# Line 32: the excessive allocation should be denied.
+	Cannot allocate order-0 page
+
+# Line 34: Current allocation status should be like follows.
+# Note 'alloc id' and 'order' columns matter for your grading.
+alloc id      page  order
+---------------------------
+      3:     0x800   0
+      4:     0x802   1
+      5:     0x804   2
+      6:     0x808   3
+      7:     0x810   4
+      8:     0x820   5
+      9:     0x840   6
+     10:     0x880   7
+     11:     0x900   8
+     12:     0xa00   9
+     13:     0xc00  10
+     14:         0  11
+     15:     0x801   0
+
+# Line 49: After cascading free, the all chunks should be reverted to the
+# initial state. The chunks might be reordered.
+	0x0:11
+	0x800:11

@@ -8,7 +8,7 @@ HEADERS=$(wildcard ./*.h)
 .PHONY: all
 all: pa4
 
-%.o: %.c $(HEADERS)
+%.o: %.c $(HEADERS) Makefile
 	$(CC) -c $(CFLAGS) $< -o $@
 
 pa4: main.o buddy.o checker.o
@@ -20,19 +20,15 @@ clean:
 
 .PHONY: test0
 test0: clean pa4 workloads/test0
-	./pa4 -n 12 $(GRADING) < workloads/test0 > RESULT
+	./pa4 -n 12 $(GRADING) < workloads/test0 $(OUTPUT)
 
 .PHONY: test1
 test1: clean pa4 workloads/test1
-	./pa4 -n 12 $(GRADING) < workloads/test1 > RESULT
+	./pa4 -n 12 $(GRADING) < workloads/test1 $(OUTPUT)
 
 .PHONY: test2
-test1: clean pa4 workloads/test2
-	./pa4 -n 12 $(GRADING) < workloads/test2 > RESULT
-
-.PHONY: test3
-test1: clean pa4 workloads/test3
-	./pa4 -n 12 $(GRADING) < workloads/test3 > RESULT
+test2: clean pa4 workloads/test1
+	./pa4 -n 13 $(GRADING) < workloads/test2 $(OUTPUT)
 
 .PHONY: cscope
 cscope:

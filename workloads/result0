@@ -1,0 +1,43 @@
+# Reordered free chunk lists are accepted.
+# Line 2: Initial free chunk lists
+	0x0:11
+	0x800:11
+
+# Line 8: chunk list status after a 0 a 0 a 1 a 1
+	0x800:11
+	0x400:10
+	0x200:9
+	0x100:8
+	0x80:7
+	0x40:6
+	0x20:5
+	0x10:4
+	0x8:3
+	0x6:1
+
+# Line 10--12: Checking UIs
+	0.0000 # UI 0
+	0.0005 # UI 2
+	0.0024 # UI 4
+
+# Line 17: After deleting op 0, 2, and 3
+	0x800:11
+	0x400:10
+	0x200:9
+	0x100:8
+	0x80:7
+	0x40:6
+	0x20:5
+	0x10:4
+	0x8:3
+	0x4:2
+	0x2:1
+	0x0:0
+
+# Line 19--20: Checking UIs
+	0.0007 # UI 2
+	0.0037 # UI 4
+
+# Line 23: After deleting the last op 1
+	0x0:11
+	0x800:11
