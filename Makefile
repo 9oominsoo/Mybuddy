@@ -20,11 +20,19 @@ clean:
 
 .PHONY: test0
 test0: clean pa4 workloads/test0
-	./pa4 -q -n 12 < workloads/test0 > RESULT
+	./pa4 -n 12 $(GRADING) < workloads/test0 > RESULT
 
 .PHONY: test1
 test1: clean pa4 workloads/test1
-	./pa4 -q -n 12 < workloads/test1 > RESULT
+	./pa4 -n 12 $(GRADING) < workloads/test1 > RESULT
+
+.PHONY: test2
+test1: clean pa4 workloads/test2
+	./pa4 -n 12 $(GRADING) < workloads/test2 > RESULT
+
+.PHONY: test3
+test1: clean pa4 workloads/test3
+	./pa4 -n 12 $(GRADING) < workloads/test3 > RESULT
 
 .PHONY: cscope
 cscope:
