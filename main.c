@@ -76,7 +76,10 @@ static void __process_operations(void)
 		}
 		switch(tolower(argv[0][0])) {
 		case '#': /* comment */
-			continue;
+			break;
+		case '-': /* Draw a horizontal line */
+			printf("----------------\n");
+			break;
 		case 'a': /* allocation */
 			if (__check_operation(2, argc, "alloc")) continue;
 			order = atoi(argv[1]);
@@ -103,7 +106,6 @@ static void __process_operations(void)
 			do {
 				print_free_pages(order);
 			} while (order-- != 0);
-			printf("----------------\n");
 			break;
 		case 'l': /* list operations */
 			if (__check_operation(1, argc, "list")) continue;
