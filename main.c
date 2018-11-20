@@ -99,9 +99,10 @@ static void __process_operations(void)
 			break;
 		case 'p': /* print chunk lists */
 			if (__check_operation(1, argc, "print all")) continue;
-			for (order = NR_ORDERS - 1; order > 0; order--) {
+			order = NR_ORDERS - 1;
+			do {
 				print_free_pages(order);
-			}
+			} while (order-- != 0);
 			printf("----------------\n");
 			break;
 		case 'l': /* list operations */
