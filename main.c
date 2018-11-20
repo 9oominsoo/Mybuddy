@@ -64,7 +64,8 @@ static void __process_operations(void)
 	unsigned int order;
 	unsigned int page;
 
-	while (keep_running && printf(">> ") && fgets(line, sizeof(line), stdin)) {
+	PRINTF(">> ");
+	while (keep_running && fgets(line, sizeof(line), stdin)) {
 		argc = __parse_operation(line, argv);
 		if (argc <= 0) {
 			break;
@@ -81,6 +82,8 @@ static void __process_operations(void)
 			order = atoi(argv[1]);
 			if (alloc_pages(&page, order) == 0) {
 				mark_alloc_pages(page, order);
+			} else {
+				printf("Cannot allocate order-%d page\n", order);
 			}
 			break;
 		case 'd': /* free / deallocation */
@@ -114,9 +117,10 @@ static void __process_operations(void)
 			printf("  a <order> : allocate a 2^@order chunk\n");
 			printf("  d <id>    : free the chunk whose allocation id is @id\n");
 			printf("  f <id>    : same to 'd'\n");
-			printf("  p <order> : print out the free chunks of @order\n");
-			printf("  x         : print all free chunks\n");
-			printf("  l         : show the allocated state\n");
+			printf("  l         : show the allocated results\n");
+			printf("  p         : print all free chunks\n");
+			printf("  s <order> : print order-@order free chunks\n");
+			printf("  u <order> : print the unusable index of order-@order\n");
 			break;
 		case 'q': /* I'm done. Good bye*/
 			keep_running = false;
@@ -124,6 +128,7 @@ static void __process_operations(void)
 		default:
 			fprintf(stderr, "Unknown operation '%c'\n", argv[0][0]);
 		}
+		PRINTF(">> ");
 	}
 }
 

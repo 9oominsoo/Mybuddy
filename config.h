@@ -4,7 +4,7 @@
 #define false 0
 typedef int bool;
 
-#define DEFAULT_NR_PAGES_IN_ORDER	5
+#define DEFAULT_NR_PAGES_IN_ORDER	8
 //#define NR_ORDERS	12
 
 extern bool verbose;

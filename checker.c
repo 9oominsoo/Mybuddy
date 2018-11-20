@@ -22,9 +22,9 @@ struct op {
 	unsigned int id;	/* Alloc operation id */
 	unsigned int order;
 	unsigned int page;
-	TAILQ_ENTRY(op) list;
+	STAILQ_ENTRY(op) list;
 };
-static TAILQ_HEAD(tailhead, op) ops;
+static STAILQ_HEAD(tailhead, op) ops;
 pthread_mutex_t ops_lock = PTHREAD_MUTEX_INITIALIZER;
 
 int mark_alloc_pages(const unsigned int page, const unsigned int order)
@@ -32,10 +32,10 @@ int mark_alloc_pages(const unsigned int page, const unsigned int order)
 	struct op *op = NULL;
 
 	pthread_mutex_lock(&ops_lock);
-	TAILQ_FOREACH(op, &ops, list) {
+	STAILQ_FOREACH(op, &ops, list) {
 		if (op->page <= page && page < op->page + (1 << op->order)) {
-			fprintf(stderr, "Page %u was allocated by operation id=%u\n",
-					page, op->id);
+			fprintf(stderr, "ERROR: Page %u was already allocated "
+					"by operation id=%u\n", page, op->id);
 			pthread_mutex_unlock(&ops_lock);
 			return -EINVAL;
 		}
@@ -47,7 +47,7 @@ int mark_alloc_pages(const unsigned int page, const unsigned int order)
 	op->id = __id++;
 	op->page = page;
 	op->order = order;
-	TAILQ_INSERT_TAIL(&ops, op, list);
+	STAILQ_INSERT_TAIL(&ops, op, list);
 	pthread_mutex_unlock(&ops_lock);
 
 	PRINTF(" Allocate order-%u page(s) from %u (id=%u)\n", order, page, op->id);
@@ -59,9 +59,9 @@ int clear_alloc_pages(const unsigned int id, unsigned int *page, unsigned int *o
 	struct op *op;
 
 	pthread_mutex_lock(&ops_lock);
-	TAILQ_FOREACH(op, &ops, list) {
+	STAILQ_FOREACH(op, &ops, list) {
 		if (id == op->id) {
-			TAILQ_REMOVE(&ops, op, list);
+			STAILQ_REMOVE(&ops, op, op, list);
 			PRINTF(" Free order-%u page(s) from %u (id=%u)\n",
 					op->order, op->page, op->id);
 			*page = op->page;
@@ -82,27 +82,27 @@ void list_alloc_pages(void)
 {
 	struct op *op;
 
-	printf("%6s    %8s  %2s\n", "ID", "page", "order");
+	printf("%8s  %8s  %2s\n", "alloc id", "page", "order");
 	printf("---------------------------\n");
 	pthread_mutex_lock(&ops_lock);
-	TAILQ_FOREACH(op, &ops, list) {
-		printf("%6u: %#8x  %2u\n", op->id, op->page, op->order);
+	STAILQ_FOREACH(op, &ops, list) {
+		printf(" %6u:  %#8x  %2u\n", op->id, op->page, op->order);
 	}
 	pthread_mutex_unlock(&ops_lock);
 }
 
 int init_checker(void)
 {
-	TAILQ_INIT(&ops);
+	STAILQ_INIT(&ops);
 	return 0;
 }
 
 void fini_checker(void)
 {
 	struct op *op;
-	while (!TAILQ_EMPTY(&ops)) {
-		op = TAILQ_FIRST(&ops);
-		TAILQ_REMOVE(&ops, op, list);
+	while (!STAILQ_EMPTY(&ops)) {
+		op = STAILQ_FIRST(&ops);
+		STAILQ_REMOVE(&ops, op, op, list);
 		free(op);
 	}
 }
