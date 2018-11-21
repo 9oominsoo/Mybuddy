@@ -1,6 +1,6 @@
-NR_ORDERS=12
+MAX_ORDER=11
 CC=gcc
-CFLAGS=-g -Wall -DNR_ORDERS=$(NR_ORDERS)
+CFLAGS=-g -Wall -DMAX_ORDER=$(MAX_ORDER)
 LDFLAGS=-lpthread
 
 HEADERS=$(wildcard ./*.h)

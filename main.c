@@ -166,6 +166,12 @@ static int __parse_options(int argc, char *argv[]) {
 		switch(opt) {
 		case 'n': /* set the number of pages to manage */
 			nr_pages_in_order = atol(optarg);
+			if (nr_pages_in_order < MAX_ORDER) {
+				fprintf(stderr, "nr_pages_in_order should be >="
+						"or equal to MAX_ORDER which is currently %d\n",
+						MAX_ORDER);
+				return -EINVAL;
+			}
 			break;
 		case 'v':
 			verbose++;

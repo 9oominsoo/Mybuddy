@@ -58,9 +58,10 @@ struct buddy {
 
 	/**
 	 * Free chunk list in the buddy system allocator.
-	 * @NR_ORDERS will be set during compilation (See Makefile for its setting
-	 * (default = 12). Also, MAKE SURE your buddy implementation can handle
-	 * up to order-(@NR_ORDERS-1).
+	 *
+	 * @NR_ORDERS is @MAX_ORDER + 1 (considering order-0 pages) and deifned in
+	 * config.h. @MAX_ORDER is set in the Makefile. MAKE SURE your buddy
+	 * implementation can handle order-0 to order-@MAX_ORDER pages.
 	 */
 	struct chunk_list chunks[NR_ORDERS];
 
@@ -77,7 +78,7 @@ static struct buddy buddy;
 
 /**
  *    Your buddy system allocator should manage from order-0 to
- *  order-(@NR_ORDERS-1). In the following example, assume your buddy system
+ *  order-@MAX_ORDER. In the following example, assume your buddy system
  *  manages page 0 to 0x1F (0 -- 31, thus @nr_pages is 32) and pages from
  *  20 to 23 and 28 (0x14 - 0x17, 0x1C) are allocated by alloc_pages()
  *  by some orders.
@@ -94,7 +95,7 @@ static struct buddy buddy;
  *
  * Order     | Start addresses of free chunks
  * ----------------------------------------------
- * NR_ORDERS-1 |
+ * MAX_ORDER |
  *    ...    |
  *     4     | 0x00
  *     3     |
@@ -120,7 +121,7 @@ static struct buddy buddy;
  * Return:
  *   0      : On successful allocation. @*page will contain the starting
  *            page number of the allocated chunk
- *  -EINVAL : When @order < 0 or @order >= NR_ORDERS
+ *  -EINVAL : When @order < 0 or @order > MAX_ORDER
  *  -ENOMEM : When order-@order contiguous chunk is not available in the system
  */
 int alloc_pages(unsigned int *page, const unsigned int order)
@@ -263,7 +264,7 @@ void print_free_pages(const unsigned int order)
  * Description:
  *    Return the unusable index of @order. In the above example, we have 27 free
  *  pages;
- *  27 = sum(i = 0 to @NR_ORDERS-1){ (1 << i) * # of order-i free chunks }
+ *  27 = sum(i = 0 to @MAX_ORDER){ (1 << i) * # of order-i free chunks }
  *    and
  *  UI(0) = 0 / 27 = 0.0 (UI of 0 is always 0 in fact).
  *  UI(1) = 1 (for 0x1d) / 27 = 0.037
@@ -285,7 +286,7 @@ double get_unusable_index(unsigned int order)
  * For instance, if @nr_pages_in_order = 8, the system should be able to
  * manage 256 pages. You can set @nr_pages_in_order by using -n option to
  * execute the program;
- * ./pa4 -n 13       <-- will initiate the system with 2^13 pages.
+ * ./pa4 -n 8       <-- will initiate the system with 2^13 pages.
  *
  * Return:
  *   0      : On successful initialization
@@ -305,9 +306,9 @@ int init_buddy(unsigned int nr_pages_in_order)
 	}
 
 	/* TODO: Don't forget to initiate the free chunk list with
-	 * order-(@NR_ORDERS-1) chunks. Note you may add multiple chunks if
-	 * @nr_pages_in_order >= @NR_ORDERS. For instance, when
-	 * @nr_pages_in_order=10 and @NR_ORDERS=10, the initial free chunk
+	 * order-@MAX_ORDER chunks. Note you may add multiple chunks if
+	 * @nr_pages_in_order > @MAX_ORDER. For instance, when
+	 * @nr_pages_in_order=10 and @MAX_ORDER=9, the initial free chunk
 	 * list will have two chunks; 0x0:9, 0x200:9.
 	 */
 

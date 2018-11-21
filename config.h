@@ -19,7 +19,7 @@
 typedef int bool;
 
 #define DEFAULT_NR_PAGES_IN_ORDER	12
-//#define NR_ORDERS	12
+#define NR_ORDERS (MAX_ORDER + 1)
 
 extern int verbose;
 
