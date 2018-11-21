@@ -20,35 +20,49 @@
 
 /**
  * Skeleton data structures to implement the buddy system allocator
- *
- *  struct chunk_list is supposed to be used to maintain order-@order
- * free chunks.
+ */
+
+/**
+ * Data structure to represent an order-@order pages. To the rest of this file,
+ * consecutive pages will be represented in @start:@order notation.
+ * E.g., 16:3 is 8(2^3)  consecutive pages (or say order-3 page) starting from
+ * page frame 16.
  */
 struct chunk {
 	/**
-	 * TODO: You can modify this structure as you need.
+	 * TODO: Modify this structure as you need.
 	 */
 	unsigned int start;
 	unsigned int order;
 };
 
+
+/**
+ * Data structure to maintain order-@order free chunks.
+ */
 struct chunk_list {
 	/**
-	 * TODO: You can modify this structure as you need
+	 * TODO: Modify this structure as you need
 	 */
 	unsigned int order;
 };
 
+
+/**
+ * Data structure to realize the buddy system allocator
+ */
 struct buddy {
 	/**
-	 * TODO: You can modify this example data structure as you need
+	 * TODO: Modify this example data structure as you need
+	 */
+
+	/**
+	 * Free chunk list in the buddy system allocator.
+	 * @NR_ORDERS will be set during compilation (See Makefile for its setting
+	 * (default = 12). Also, MAKE SURE your buddy implementation can handle
+	 * up to order-(@NR_ORDERS-1).
 	 */
 	struct chunk_list chunks[NR_ORDERS];
-							/* @NR_ORDERS will be set during compilation.
-							 * See Makefile for its setting (default = 12).
-							 * MAKE SURE your buddy implementation can handle
-							 * up to order-(NR_ORDERS-1).
-							 */
 
 	unsigned int allocated;	/* Number of pages that are allocated */
 	unsigned int free;		/* Number of pages that are free */
@@ -58,7 +72,7 @@ struct buddy {
 /**
  * This is your buddy system allocator instance!
  */
-struct buddy buddy;
+static struct buddy buddy;
 
 
 /**
@@ -67,7 +81,7 @@ struct buddy buddy;
  *  manages page 0 to 0x1F (0 -- 31, thus @nr_pages is 32) and pages from
  *  20 to 23 and 28 (0x14 - 0x17, 0x1C) are allocated by alloc_pages()
  *  by some orders.
- *  At this moment, the buddy system will split the address space like;
+ *  At this moment, the buddy system will split the address space into;
  *
  *      0  1  2  3  4  5  6  7  8  9  A  B  C  D  E  F
  * 0x00 <-------------------4-------------------------->
@@ -132,8 +146,8 @@ int alloc_pages(unsigned int *page, const unsigned int order)
 	 *
 	 *----------------------------------------------------------------------
 	 * Print out below message using PRINTF upon each events. Note it is
-	 * possible to have multiple events to handle a single alloc_pages().
-	 * Also, make sure to use PRINTF, _NOT_ printf.
+	 * possible for multiple events to be happened to handle a single
+	 * alloc_pages(). Also, MAKE SURE TO USE PRINTF, _NOT_ printf.
 	 *
 	 * - Split an order-@x chunk starting from @page into @left and @right:
 	 *   PRINTF("SPLIT 0x%x:%u -> 0x%x:%u + 0x%x:%u\n",
