@@ -283,7 +283,9 @@ double get_unusable_index(unsigned int order)
  *
  * @nr_pages_in_order: number of pages in order-n notation to manage.
  * For instance, if @nr_pages_in_order = 8, the system should be able to
- * manage 256 pages
+ * manage 256 pages. You can set @nr_pages_in_order by using -n option to
+ * execute the program;
+ * ./pa4 -n 13       <-- will initiate the system with 2^13 pages.
  *
  * Return:
  *   0      : On successful initialization

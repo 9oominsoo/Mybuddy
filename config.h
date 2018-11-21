@@ -21,7 +21,7 @@ typedef int bool;
 #define DEFAULT_NR_PAGES_IN_ORDER	12
 //#define NR_ORDERS	12
 
-extern bool verbose;
+extern int verbose;
 
 #define PRINTF(...) \
 	if (verbose > 0) printf(__VA_ARGS__)
