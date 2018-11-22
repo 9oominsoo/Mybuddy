@@ -64,7 +64,7 @@ int mark_alloc_pages(const unsigned int page, const unsigned int order)
 	STAILQ_INSERT_TAIL(&ops, op, list);
 	pthread_mutex_unlock(&ops_lock);
 
-	PRINTF(" Allocate order-%u page(s) from %u (id=%u)\n", order, page, op->id);
+	LOG(" Allocate order-%u page(s) from %u (id=%u)\n", order, page, op->id);
 	return 0;
 }
 
@@ -76,7 +76,7 @@ int clear_alloc_pages(const unsigned int id, unsigned int *page, unsigned int *o
 	STAILQ_FOREACH(op, &ops, list) {
 		if (id == op->id) {
 			STAILQ_REMOVE(&ops, op, op, list);
-			PRINTF(" Free order-%u page(s) from %u (id=%u)\n",
+			LOG(" Free order-%u page(s) from %u (id=%u)\n",
 					op->order, op->page, op->id);
 			*page = op->page;
 			*order = op->order;

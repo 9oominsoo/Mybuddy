@@ -39,6 +39,8 @@ struct chunk {
 
 /**
  * Data structure to maintain order-@order free chunks.
+ * NOTE that chunk_list SHOULD WORK LIKE THE QUEUE; the firstly added chunk
+ * should be used first, otherwise the grading system will fail.
  */
 struct chunk_list {
 	/**
@@ -91,7 +93,7 @@ static struct buddy buddy;
  *                  |--|--|--|--------------|
  *                     allocated
  *
- *   Thus, one of possible buddy systems may maintain free chunk list like;
+ *   Thus, the buddy system will maintain the free chunk lists like;
  *
  * Order     | Start addresses of free chunks
  * ----------------------------------------------
@@ -111,12 +113,14 @@ static struct buddy buddy;
  * Description:
  *    For example, when @order=0, allocate a single page, @order=2 means
  *  to allocate 4 consecutive pages, and so forth.
- *    From the example state above, alloc_pages(2) will give 0x10 (or 0x18)
- *  through @*page, and the corresponding entry will be removed from the
- *  chunk list. To hanle alloc_pages(3), the order-4 chunk (0x00 -- 0x0f)
- *  should be broken into smaller chunks (say 0x00 -- 0x07, 0x08 -- 0x0f),
- *  and one of the buddies will be returned through @page whereas the other
- *  buddy will be put into order-3 chunk list.
+ *    From the example state above, alloc_pages(2) gives 0x10 through @*page
+ *  and the corresponding entry is removed from the free chunk. NOTE THAT the
+ *  free chunk lists should be maintained as 'FIFO' so alloc_pages(2) returns 
+ *  0x10, not 0x18. 
+ *    To hanle alloc_pages(3), the order-4 chunk (0x00 -- 0x0f) should
+ *  be broken into smaller chunks (say 0x00 -- 0x07, 0x08 -- 0x0f), and
+ *  the LEFT BUDDY will be returned through @page whereas RIGHT BUDDY
+ *  will be put into the order-3 free chunk list.
  *
  * Return:
  *   0      : On successful allocation. @*page will contain the starting
@@ -133,22 +137,19 @@ int alloc_pages(unsigned int *page, const unsigned int order)
 	 * if (exist) {
 	 *    allocate the chunk from the list; Done!
 	 * } else {
-	 *    Make a order-@order chunk by breaking a higher-order chunk(s)
+	 *    Make an order-@order chunk by breaking a higher-order chunk(s)
 	 *    - Find the smallest free chunk that can satisfy the request
-	 *    - Break the chunk until it is small enough
+	 *    - Break the LEFT chunk until it is small enough
 	 *    - Put remainders into the free chunk list
 	 *
 	 *    Return the allocated chunk via @*page
-	 *
-	 *    Make sure that your implementation handled the cascading case
-	 *    where a free chunk is only available from many-times-higher-order
-	 *    chunk list.
 	 * }
 	 *
 	 *----------------------------------------------------------------------
 	 * Print out below message using PRINTF upon each events. Note it is
 	 * possible for multiple events to be happened to handle a single
-	 * alloc_pages(). Also, MAKE SURE TO USE PRINTF, _NOT_ printf.
+	 * alloc_pages(). Also, MAKE SURE TO USE 'PRINTF', _NOT_ printf, otherwise
+	 * the grading procedure will fail.
 	 *
 	 * - Split an order-@x chunk starting from @page into @left and @right:
 	 *   PRINTF("SPLIT 0x%x:%u -> 0x%x:%u + 0x%x:%u\n",
@@ -178,13 +179,19 @@ int alloc_pages(unsigned int *page, const unsigned int order)
 	 * PUT   0x4:2
 	 * ALLOC 0x0:2
 	 *
-	 * ALL POSSIBLE AND CORRECT COMBINATIONS WILL BE ACCEPTED
+	 *       OR
+	 *
+	 * SPLIT 0x0:4 -> 0x0:3 + 0x8:3
+	 * SPLIT 0x0:3 -> 0x0:2 + 0x4:2
+	 * PUT   0x4:2
+	 * PUT   0x8:3
+	 * ALLOC 0x0:2
 	 *----------------------------------------------------------------------
 	 */
 
 	buddy.allocated += (1 << order);
 	buddy.free -= (1 << order);
-	return 0;
+	return -ENOMEM;
 }
 
 
@@ -192,8 +199,9 @@ int alloc_pages(unsigned int *page, const unsigned int order)
  * Free @page which are contiguous for 2^@order pages
  *
  * Description:
- *    Assume @page was allocated by alloc_pages(@order) above. Don't forget
- *  to merge freed chunk with its buddy if it exists.
+ *    Assume @page was allocated by alloc_pages(@order) above. 
+ *  WARNING: When handling free chunks, put them into the free chunk list
+ *  carefully so that free chunk lists work in FIFO.
  */
 void free_pages(unsigned int page, const unsigned int order)
 {
@@ -202,7 +210,7 @@ void free_pages(unsigned int page, const unsigned int order)
 	 *
 	 * Find the buddy chunk from this @order.
 	 * if (buddy does not exist in this order-@order free list) {
-	 *    put into this chunk list. Problem solved!!!
+	 *    put into the TAIL of this chunk list. Problem solved!!!
 	 * } else {
 	 *    Merge with the buddy
 	 *    Promote the merged chunk into the higher-order chunk list
@@ -212,7 +220,8 @@ void free_pages(unsigned int page, const unsigned int order)
 	 * }
 	 *
 	 *----------------------------------------------------------------------
-	 * Similar to alloc_pages, print following messages when the event happens;
+	 * Similar to alloc_pages() above, print following messages using PRINTF
+	 * when the event happens;
 	 *
 	 * - Merge order-$x buddies starting from $left and $right:
 	 *   PRINTF("MERGE : 0x%x:%u + 0x%x:%u -> 0x%x:%u\n",
@@ -251,21 +260,26 @@ void print_free_pages(const unsigned int order)
 	unsigned int starting_page = 0x43; /* I love 43 because it's perfect!! */
 
 	/**
-	 * Your implementation should print out each free chunk
-	 * in the following format;
+	 * Your implementation should print out each free chunk from the beginning
+	 * in the following format.
+	 * WARNING: USE fprintf(stderr) NOT printf, otherwise the grading
+	 * system will evaluate your implementation wrong.
 	 */
-	printf("    0x%x:%u\n", starting_page, order);
+	fprintf(stderr, "    0x%x:%u\n", starting_page, order);
 }
 
 
 /**
- * Print out the unusable index(UI) for order-@order.
+ * Return the unusable index(UI) of order-@order.
  *
  * Description:
  *    Return the unusable index of @order. In the above example, we have 27 free
  *  pages;
- *  27 = sum(i = 0 to @MAX_ORDER){ (1 << i) * # of order-i free chunks }
+ *  # of free pages =
+ *    sum(i = 0 to @MAX_ORDER){ (1 << i) * # of order-i free chunks }
+ *
  *    and
+ *
  *  UI(0) = 0 / 27 = 0.0 (UI of 0 is always 0 in fact).
  *  UI(1) = 1 (for 0x1d) / 27 = 0.037
  *  UI(2) = (1 (0x1d) + 2 (0x1e-0x1f)) / 27 = 0.111
@@ -283,10 +297,10 @@ double get_unusable_index(unsigned int order)
  * Initialize your buddy system.
  *
  * @nr_pages_in_order: number of pages in order-n notation to manage.
- * For instance, if @nr_pages_in_order = 8, the system should be able to
- * manage 256 pages. You can set @nr_pages_in_order by using -n option to
- * execute the program;
- * ./pa4 -n 8       <-- will initiate the system with 2^13 pages.
+ * For instance, if @nr_pages_in_order = 13, the system should be able to
+ * manage 8192 pages. You can set @nr_pages_in_order by using -n option while
+ * launching the program;
+ * ./pa4 -n 13       <-- will initiate the system with 2^13 pages.
  *
  * Return:
  *   0      : On successful initialization
@@ -305,11 +319,12 @@ int init_buddy(unsigned int nr_pages_in_order)
 		buddy.chunks[i].order = i;
 	}
 
-	/* TODO: Don't forget to initiate the free chunk list with
-	 * order-@MAX_ORDER chunks. Note you may add multiple chunks if
+	/**
+	 * TODO: Don't forget to initiate the free chunk list with
+	 * order-@MAX_ORDER chunks. Note you might add multiple chunks if
 	 * @nr_pages_in_order > @MAX_ORDER. For instance, when
-	 * @nr_pages_in_order=10 and @MAX_ORDER=9, the initial free chunk
-	 * list will have two chunks; 0x0:9, 0x200:9.
+	 * @nr_pages_in_order = 10 and @MAX_ORDER = 9, the initial free chunk
+	 * lists will have two chunks; 0x0:9, 0x200:9.
 	 */
 
 	return 0;
@@ -317,10 +332,14 @@ int init_buddy(unsigned int nr_pages_in_order)
 
 
 /**
- * Return resources that your buddy system is using. No other function will
- * be called after calling this function.
+ * Return resources that your buddy system has been allocated. No other
+ * function will be called after calling this function.
  */
 void fini_buddy(void)
 {
-	/* TODO: Do your finalization if needed */
+	/**
+	 * TODO: Do your finalization if needed, and don't forget to release
+	 * the initial chunks that you put in init_buddy().
+	 */
+
 }

@@ -24,7 +24,7 @@ typedef int bool;
 extern int verbose;
 
 #define PRINTF(...) \
-	if (verbose > 0) printf(__VA_ARGS__)
+	if (verbose > 0) fprintf(stderr, __VA_ARGS__)
 #define LOG(...) \
-	if (verbose > 1) printf(__VA_ARGS__)
+	if (verbose > 1) fprintf(stderr, __VA_ARGS__)
 #endif

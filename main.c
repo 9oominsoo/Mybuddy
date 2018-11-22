@@ -25,6 +25,7 @@
 #include "checker.h"
 
 int verbose = 1;
+static int phase = 0;
 static unsigned int nr_pages_in_order = DEFAULT_NR_PAGES_IN_ORDER;
 
 static int __parse_operation(char *line, char *argv[])
@@ -92,7 +93,7 @@ static void __process_operations(void)
 		case '#': /* comment */
 			break;
 		case '-': /* Draw a horizontal line */
-			printf("----------------\n");
+			fprintf(stderr, "%d ---------------\n", phase++);
 			break;
 		case 'a': /* allocation */
 			if (__check_operation(2, argc, "alloc")) continue;
@@ -100,7 +101,7 @@ static void __process_operations(void)
 			if (alloc_pages(&page, order) == 0) {
 				mark_alloc_pages(page, order);
 			} else {
-				printf("Cannot allocate order-%d page\n", order);
+				fprintf(stderr, "Cannot allocate order-%d page\n", order);
 			}
 			break;
 		case 'd': /* free / deallocation */
@@ -120,6 +121,7 @@ static void __process_operations(void)
 			do {
 				print_free_pages(order);
 			} while (order-- != 0);
+			fprintf(stderr, "%d ---------------\n", phase++);
 			break;
 		case 'l': /* list operations */
 			if (__check_operation(1, argc, "list")) continue;
@@ -129,7 +131,7 @@ static void __process_operations(void)
 			if (__check_operation(2, argc, "unusable index")) continue;
 			order = atoi(argv[1]);
 			PRINTF("Unusable index for order %d is ", order);
-			printf("    %.4f\n", get_unusable_index(order));
+			fprintf(stderr, "    %.4f\n", get_unusable_index(order));
 			break;
 		case 'h': /* Help!! */
 			printf("  a <order> : allocate a 2^@order chunk\n");
