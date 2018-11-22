@@ -49,14 +49,9 @@ test-full: pa4
 	@echo "****  Congraturations, full test PASSED!!!!  ****"
 	@echo "*************************************************"
 
-# Basic leak test
-.PHONY: test-leak-basic
-test-leak-basic: pa4
-	$(VALGRIND) ./pa4 -q < workloads/free
-
-# Full memory leak test
-.PHONY: test-leak-full
-test-leak-full: pa4
+# Memory leak test
+.PHONY: check-leak
+check-leak: pa4
 	$(VALGRIND) ./pa4 -n 13 -q < workloads/full
 
 .PHONY: cscope
