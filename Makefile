@@ -33,7 +33,7 @@ test-alloc: pa4
 .PHONY: test-free
 test-free: pa4
 	./pa4 -q < workloads/free 2> free-result
-	@diff -b free-result workloads/free-ref
+	@diff -wB free-result workloads/free-ref
 	@echo
 	@echo "*************************************************"
 	@echo "****  Congraturations, free test PASSED!!!!  ****"
@@ -43,7 +43,7 @@ test-free: pa4
 .PHONY: test-full
 test-full: pa4
 	./pa4 -n 13 -q < workloads/full 2> full-result
-	@diff -b full-result workloads/full-ref
+	@diff -wB full-result workloads/full-ref
 	@echo
 	@echo "*************************************************"
 	@echo "****  Congraturations, full test PASSED!!!!  ****"
